@@ -23,20 +23,39 @@ const CartContext = createContext<CartContextData>({} as CartContextData);
 
 export function CartProvider({ children }: CartProviderProps): JSX.Element {
   const [cart, setCart] = useState<Product[]>(() => {
-    // const storagedCart = Buscar dados do localStorage
+    const storagedCart = localStorage.getItem('@RocketShoes:cart')
 
-    // if (storagedCart) {
-    //   return JSON.parse(storagedCart);
-    // }
+    if (storagedCart) {
+      return JSON.parse(storagedCart);
+    }
 
     return [];
   });
 
   const addProduct = async (productId: number) => {
     try {
-      // TODO
+      api.get(`products?id=${productId}`)
+        .then(res => {
+          if (!localStorage.getItem('@RocketShoes:cart')) {
+            //caso localsotage nao exista cai nesta consdicao para crialo e evitar erro 
+            localStorage.setItem('@RocketShoes:cart', JSON.stringify(res.data))
+
+            setCart(res.data);
+          } else {
+            var cache = JSON.parse(localStorage.getItem('@RocketShoes:cart')!);
+            //com o localstorage criado salva seus elementos ee intera com a resposta da api
+            let localCache = [...cache, ...res.data];
+
+            localStorage.setItem('@RocketShoes:cart', JSON.stringify(localCache))
+
+            setCart(localCache);
+          }
+        })
+
+      toast.success('Item adicionado com sucesso')
+
     } catch {
-      // TODO
+      toast.error('Não foi possivel salvar o item no carrinho')
     }
   };
 
